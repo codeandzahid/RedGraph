@@ -66,6 +66,27 @@ SOFTWARE_GL=1 QS='&res=0.6&aa=0&shadow=1024' FPS=24
 
 That is about 2 seconds per frame, about 30 minutes for a 35 second short. Run renders in the background and check the contact sheet first (`node tools/capture.mjs sheet review/all.jpg 1 10`).
 
+## Fast render
+
+`scripts/render-fast.sh` renders the same video faster. It splits the video into frame-exact chunks, renders each chunk in its own Chrome in parallel, at a smaller 3D size (`res=0.4`, `shadow=512`), joins the chunks, and adds the sound once at the end. The video stays 1080x1920 — the 3D is drawn smaller and upscaled, so it looks a little softer than the full render.
+
+```bash
+bash scripts/render-fast.sh ~/faceless-shorts/knuckles renders/fast.mp4
+```
+
+Options: `--workers N` (how many Chromes at once; it picks from free RAM if you do not say), `--res 0.4`, `--fps 24`, `--range START END` (render only part of the video, for example to redo one fixed shot).
+
+Measured on this computer (4 CPUs, 8 GB RAM, no graphics card), Deep Dive 3D, a 5 second slice (120 frames):
+
+- Standard render: 874 s — 7.3 s per frame.
+- Fast render: 399 s — 3.3 s per frame. That is 2.2x faster.
+- Two chunks in parallel instead of one after the other: 347 s instead of 408 s. Only 1.2x — the software renderer already uses all the cores, so a second Chrome adds little.
+- All together the fast render is about 2.6x faster than the standard render.
+
+What that means for a 1 minute video: about 30–70 minutes with the fast render, depending on how heavy the 3D scenes are (light scenes about 30, heavy scenes about 70). The standard render takes 70–175 minutes. So it is much faster, but it is not 10 minutes.
+
+10 minutes needs a graphics card. That is the real fix — with a graphics card these frames draw in milliseconds. A bigger computer with many more cores and RAM would help too, because then the parallel chunks would actually scale. On this computer, use the fast render for drafts and quick checks, and the full render when the softer 3D would bother you.
+
 ## Notes
 
 - Videos are 1080x1920, 24 fps, 25–60 seconds depending on style.
